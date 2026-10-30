@@ -419,6 +419,61 @@
   color: var(--cav-blue);
 }
 
+.auth-mode-toggle {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  margin: 22px 0 16px;
+  border: 1px solid #edf1fb;
+  border-radius: 12px;
+  background: #f7f9ff;
+}
+
+.auth-mode-toggle button,
+.role-selector button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.auth-mode-toggle button {
+  flex: 1;
+  min-height: 40px;
+  background: transparent;
+  color: #65728d;
+}
+
+.auth-mode-toggle button.active {
+  background: white;
+  color: var(--cav-blue);
+  box-shadow: 0 5px 12px rgba(23, 42, 86, 0.08);
+}
+
+.role-selector {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 20px;
+}
+
+.role-selector button {
+  flex: 1;
+  min-height: 42px;
+  background: #f2f5ff;
+  color: #2a3c5f;
+}
+
+.role-selector button.selected {
+  background: linear-gradient(135deg, #315cf5, #2248d1);
+  color: white;
+  box-shadow: 0 8px 18px rgba(49, 92, 245, 0.2);
+}
+
 .login-options {
   display: flex;
   align-items: center;
