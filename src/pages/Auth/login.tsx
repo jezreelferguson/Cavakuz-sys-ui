@@ -7,18 +7,13 @@ import {
   Printer,
   Palette,
   CheckCircle2,
-  UserRound,
-  ShieldCheck,
 } from 'lucide-react'
 import '../../assets/styles/login.css'
 import { useNavigate } from 'react-router-dom'
 import api, { setAuthToken } from '../../../services/axios'
 
 export default function Login() {
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
-  const [role, setRole] = useState<'Admin' | 'Recorder'>('Admin')
   const [showPassword, setShowPassword] = useState(false)
-  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
@@ -33,14 +28,11 @@ export default function Login() {
 
     try {
       const payload = {
-        name: fullName || email.split('@')[0],
         email,
         password,
-        ...(mode === 'signup' ? { password_confirmation: password } : {}),
       }
 
-      const endpoint = mode === 'signup' ? '/register' : '/login'
-      const response = await api.post(endpoint, payload)
+      const response = await api.post('/login', payload)
       const token = response.data?.token ?? response.data?.access_token ?? null
       const user = response.data?.user ?? response.data?.data?.user ?? null
 
@@ -48,17 +40,17 @@ export default function Login() {
         setAuthToken(token, remember)
       }
 
-      if (user?.role) {
-        const persistedRole = user.role === 'admin' ? 'Admin' : 'Recorder'
-        sessionStorage.setItem('cavakuz-role', persistedRole)
+      if (user) {
+        sessionStorage.setItem('cavakuz-user', JSON.stringify(user))
         if (remember) {
-          localStorage.setItem('cavakuz-role', persistedRole)
+          localStorage.setItem('cavakuz-user', JSON.stringify(user))
         }
-      } else if (remember) {
-        sessionStorage.setItem('cavakuz-role', role)
-        localStorage.setItem('cavakuz-role', role)
-      } else {
-        sessionStorage.setItem('cavakuz-role', role)
+      }
+
+      const persistedRole = 'User'
+      sessionStorage.setItem('cavakuz-role', persistedRole)
+      if (remember) {
+        localStorage.setItem('cavakuz-role', persistedRole)
       }
 
       navigate('/dashboard')
@@ -143,7 +135,7 @@ export default function Login() {
           </div>
 
           <div className="brand-bottom">
-            <span>ROLE-BASED OPERATIONS FOR ADMINS AND RECORDERS.</span>
+            <span>GENERAL OPERATIONS FOR EVERYDAY WORK.</span>
             <div className="color-strip">
               <i /><i /><i /><i />
             </div>
@@ -164,62 +156,12 @@ export default function Login() {
             </div>
 
             <span className="form-overline">SECURE ACCESS</span>
-            <h2>{mode === 'login' ? 'Welcome back' : 'Create account'}<span>.</span></h2>
+            <h2>Welcome back<span>.</span></h2>
             <p className="form-description">
-              {mode === 'login'
-                ? 'Sign in to continue managing sales and customer work.'
-                : 'Set up access for your team and assign the right role.'}
+              Sign in to continue managing sales and customer work.
             </p>
 
-            {/* <div className="auth-mode-toggle" aria-label="Authentication mode">
-              <button
-                type="button"
-                className={mode === 'login' ? 'active' : ''}
-                onClick={() => setMode('login')}
-              >
-                Log in
-              </button>
-              <button
-                type="button"
-                className={mode === 'signup' ? 'active' : ''}
-                onClick={() => setMode('signup')}
-              >
-                Sign up
-              </button>
-            </div> */}
-
-            <div className="role-selector" aria-label="User role">
-              {(['Admin', 'Recorder'] as const).map((item) => (
-                <button
-                  type="button"
-                  key={item}
-                  className={role === item ? 'selected' : ''}
-                  onClick={() => setRole(item)}
-                >
-                  {item === 'Admin' ? <ShieldCheck size={16} /> : <UserRound size={16} />}
-                  {item}
-                </button>
-              ))}
-            </div>
-
             <form onSubmit={handleSubmit}>
-              {mode === 'signup' && (
-                <div className="mb-3">
-                  <label htmlFor="full-name" className="form-label">
-                    Full name
-                  </label>
-                  <input
-                    id="full-name"
-                    type="text"
-                    className="form-control cavakuz-input"
-                    placeholder="Jane Doe"
-                    value={fullName}
-                    onChange={(event) => setFullName(event.target.value)}
-                    required={mode === 'signup'}
-                  />
-                </div>
-              )}
-
               {errorMessage && (
                 <div className="alert alert-danger" role="alert">
                   {errorMessage}
@@ -254,7 +196,7 @@ export default function Login() {
                     placeholder="Enter your password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    autoComplete="current-password"
                     required
                   />
 
@@ -269,30 +211,28 @@ export default function Login() {
                 </div>
               </div>
 
-              {mode === 'login' && (
-                <div className="login-options">
-                  <label className="remember-option">
-                    <input
-                      type="checkbox"
-                      checked={remember}
-                      onChange={(event) => setRemember(event.target.checked)}
-                    />
-                    <span>Remember me</span>
-                  </label>
+              <div className="login-options">
+                <label className="remember-option">
+                  <input
+                    type="checkbox"
+                    checked={remember}
+                    onChange={(event) => setRemember(event.target.checked)}
+                  />
+                  <span>Remember me</span>
+                </label>
 
-                  <a href="/forgot-password">Forgot password?</a>
-                </div>
-              )}
+                <a href="/forgot-password">Forgot password?</a>
+              </div>
 
               <button type="submit" className="cavakuz-submit" disabled={isSubmitting}>
-                <span>{isSubmitting ? 'Please wait...' : mode === 'login' ? 'Sign in to workspace' : 'Create workspace account'}</span>
+                <span>{isSubmitting ? 'Please wait...' : 'Sign in to workspace'}</span>
                 <ArrowRight size={19} />
               </button>
             </form>
 
             <div className="security-message">
               <span className="security-dot" />
-              Secure access for {role} users only.
+              Secure access for your workspace.
             </div>
           </div>
 

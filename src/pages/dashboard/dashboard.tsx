@@ -22,7 +22,7 @@ import UniversalSidebar from '../../components/UniversalSidebar'
 import api from '../../../services/axios'
 
 type PaymentStatus = 'Full Payment' | 'Half Payment' | 'Not Paid'
-type Role = 'Admin' | 'Recorder'
+type Role = 'User'
 
 type Customer = {
   id: number
@@ -136,7 +136,7 @@ export default function Dashboard() {
     loadDashboardData()
   }, [])
 
-  const userRole = (sessionStorage.getItem('cavakuz-role') ?? localStorage.getItem('cavakuz-role') ?? 'Admin') as Role
+  const userRole = (sessionStorage.getItem('cavakuz-role') ?? localStorage.getItem('cavakuz-role') ?? 'User') as Role
 
   const filteredCustomers = useMemo(
     () =>
@@ -683,7 +683,7 @@ export default function Dashboard() {
             <button className="profile-button" onClick={() => openPage('Settings')}>
               <div className="profile-avatar"><UserRound size={20} /></div>
               <div className="profile-copy">
-                <strong>{userRole === 'Admin' ? 'Admin User' : 'Recorder User'}</strong>
+                <strong>General User</strong>
                 <small>{userRole}</small>
               </div>
               <ChevronDown size={16} />
@@ -695,11 +695,11 @@ export default function Dashboard() {
           <section className="welcome-row">
             <div>
               <div className="eyebrow">BUSINESS OPERATIONS</div>
-              <h1>{activePage === 'Dashboard' ? `Welcome back, ${userRole === 'Admin' ? 'Admin User' : 'Recorder User'}` : activePage}</h1>
+              <h1>{activePage === 'Dashboard' ? 'Welcome back, General User' : activePage}</h1>
               <p>
                 {activePage === 'Dashboard'
                   ? 'Stay on top of customers, stock, tasks, and payments in real time.'
-                  : `Manage your ${activePage.toLowerCase()} workspace for the ${userRole.toLowerCase()} role.`}
+                  : `Manage your ${activePage.toLowerCase()} workspace.`}
               </p>
             </div>
             <div className="welcome-actions">

@@ -33,7 +33,7 @@ export default function AppShell({ activePage, pageTitle, pageSubtitle, children
     loadNotifications()
   }, [])
 
-  const userRole = (sessionStorage.getItem('cavakuz-role') ?? localStorage.getItem('cavakuz-role') ?? 'Admin') as 'Admin' | 'Recorder'
+  const userRole = (sessionStorage.getItem('cavakuz-role') ?? localStorage.getItem('cavakuz-role') ?? 'User') as 'User'
 
   const openPage = (page: string) => {
     const map: Record<string, string> = {
@@ -84,7 +84,7 @@ export default function AppShell({ activePage, pageTitle, pageSubtitle, children
             <button className="profile-button" onClick={() => openPage('Settings')}>
               <div className="profile-avatar"><UserRound size={20} /></div>
               <div className="profile-copy">
-                <strong>{userRole === 'Admin' ? 'Admin User' : 'Recorder User'}</strong>
+                <strong>General User</strong>
                 <small>{userRole}</small>
               </div>
               <ChevronDown size={16} />
