@@ -9,8 +9,9 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import '../../assets/styles/login.css'
-import { useNavigate } from 'react-router-dom'
-import api, { setAuthToken } from '../../../services/axios'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthContext'
+import { getErrorMessage } from '../../lib/http'
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
@@ -20,6 +21,9 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const navigate = useNavigate()
+  const location = useLocation()
+  const { login } = useAuth()
+  const from = (location.state as { from?: string } | null)?.from ?? '/dashboard'
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -27,42 +31,10 @@ export default function Login() {
     setIsSubmitting(true)
 
     try {
-      const payload = {
-        email,
-        password,
-      }
-
-      const response = await api.post('/login', payload)
-      const token = response.data?.token ?? response.data?.access_token ?? null
-      const user = response.data?.user ?? response.data?.data?.user ?? null
-
-      if (token) {
-        setAuthToken(token, remember)
-      }
-
-      if (user) {
-        sessionStorage.setItem('cavakuz-user', JSON.stringify(user))
-        if (remember) {
-          localStorage.setItem('cavakuz-user', JSON.stringify(user))
-        }
-      }
-
-      const persistedRole = 'User'
-      sessionStorage.setItem('cavakuz-role', persistedRole)
-      if (remember) {
-        localStorage.setItem('cavakuz-role', persistedRole)
-      }
-
-      navigate('/dashboard')
+      await login(email, password, remember)
+      navigate(from, { replace: true })
     } catch (error: unknown) {
-      const message =
-        typeof error === 'object' && error !== null && 'response' in error
-          ? (error as { response?: { data?: { message?: string; error?: string } } }).response?.data?.message ??
-            (error as { response?: { data?: { error?: string } } }).response?.data?.error ??
-            'Unable to sign in right now. Please try again.'
-          : 'Unable to sign in right now. Please try again.'
-
-      setErrorMessage(String(message))
+      setErrorMessage(getErrorMessage(error))
     } finally {
       setIsSubmitting(false)
     }
@@ -221,7 +193,7 @@ export default function Login() {
                   <span>Remember me</span>
                 </label>
 
-                <a href="/forgot-password">Forgot password?</a>
+                <span>Workspace access only</span>
               </div>
 
               <button type="submit" className="cavakuz-submit" disabled={isSubmitting}>

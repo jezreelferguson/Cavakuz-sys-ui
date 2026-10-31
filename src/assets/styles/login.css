@@ -497,7 +497,8 @@
   accent-color: var(--cav-blue);
 }
 
-.login-options a {
+.login-options a,
+.login-options span {
   color: var(--cav-blue);
   font-weight: 700;
   text-decoration: none;

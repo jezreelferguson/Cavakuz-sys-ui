@@ -1,59 +1,47 @@
-import { Bell, ChevronDown, Menu, Search, UserRound, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import api from '../../services/axios'
+import { Bell, ChevronDown, Menu, Plus, Search, UserRound, X } from 'lucide-react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { notificationsApi } from '../api'
+import { useAuth } from '../auth/AuthContext'
 import '../assets/styles/dashboard.css'
 import UniversalSidebar from './UniversalSidebar'
 
 type AppShellProps = {
-  activePage: string
   pageTitle: string
   pageSubtitle: string
-  children: React.ReactNode
-  action?: React.ReactNode
+  children: ReactNode
+  action?: ReactNode
 }
 
-export default function AppShell({ activePage, pageTitle, pageSubtitle, children, action }: AppShellProps) {
+export default function AppShell({ pageTitle, pageSubtitle, children, action }: AppShellProps) {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [search, setSearch] = useState('')
-  const [notificationCount, setNotificationCount] = useState(0)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
     const loadNotifications = async () => {
       try {
-        const { data } = await api.get('/notifications')
-        const items = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : Array.isArray(data?.notifications) ? data.notifications : []
-        setNotificationCount(items.filter((item: { read?: boolean }) => !item.read).length)
+        const items = await notificationsApi.list()
+        setUnreadCount(items.filter((item) => !item.is_read).length)
       } catch {
-        setNotificationCount(0)
+        setUnreadCount(0)
       }
     }
 
-    loadNotifications()
+    void loadNotifications()
   }, [])
 
-  const userRole = (sessionStorage.getItem('cavakuz-role') ?? localStorage.getItem('cavakuz-role') ?? 'User') as 'User'
-
-  const openPage = (page: string) => {
-    const map: Record<string, string> = {
-      Dashboard: '/dashboard',
-      Customers: '/dashboard/customers',
-      Tasks: '/dashboard/tasks',
-      'Services / Inventory': '/dashboard/inventory',
-      'Records & Payments': '/dashboard/records',
-      'Financial Report': '/dashboard/financial-report',
-      Invoices: '/dashboard/invoices',
-      Settings: '/dashboard',
-    }
-
-    setSidebarOpen(false)
-    navigate(map[page] ?? '/dashboard')
+  const submitSearch = (event: FormEvent) => {
+    event.preventDefault()
+    const query = search.trim()
+    navigate(query ? `/customers?q=${encodeURIComponent(query)}` : '/customers')
   }
 
   return (
     <div className="cavakuz-app">
-      <UniversalSidebar activePage={activePage} onNavigate={openPage} sidebarOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <UniversalSidebar sidebarOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="cavakuz-main">
         <header className="topbar">
@@ -61,31 +49,31 @@ export default function AppShell({ activePage, pageTitle, pageSubtitle, children
             <Menu size={22} />
           </button>
 
-          <div className="global-search">
+          <form className="global-search" onSubmit={submitSearch}>
             <Search size={18} />
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search customers, tasks, services..."
-              aria-label="Search dashboard"
+              placeholder="Search customers..."
+              aria-label="Search customers"
             />
             {search && (
-              <button onClick={() => setSearch('')} aria-label="Clear search">
+              <button type="button" onClick={() => setSearch('')} aria-label="Clear search">
                 <X size={16} />
               </button>
             )}
-          </div>
+          </form>
 
           <div className="topbar-actions">
-            <button className="notification-button" aria-label="Notifications">
+            <Link to="/notifications" className="notification-button" aria-label="Notifications">
               <Bell size={20} />
-              {notificationCount > 0 && <span>{notificationCount}</span>}
-            </button>
-            <button className="profile-button" onClick={() => openPage('Settings')}>
+              {unreadCount > 0 && <span />}
+            </Link>
+            <button className="profile-button" type="button">
               <div className="profile-avatar"><UserRound size={20} /></div>
               <div className="profile-copy">
-                <strong>General User</strong>
-                <small>{userRole}</small>
+                <strong>{user?.name ?? 'Workspace user'}</strong>
+                <small>{user?.role ?? 'assistant'}</small>
               </div>
               <ChevronDown size={16} />
             </button>
@@ -100,13 +88,19 @@ export default function AppShell({ activePage, pageTitle, pageSubtitle, children
               <p>{pageSubtitle}</p>
             </div>
 
-            {action && <div className="welcome-actions">{action}</div>}
+            <div className="welcome-actions">
+              {action ?? (
+                <Link to="/sales/new" className="btn btn-primary add-record-btn">
+                  <Plus size={17} /> New sale
+                </Link>
+              )}
+            </div>
           </section>
 
           {children}
 
           <footer className="dashboard-footer">
-            <span>© 2026 Cavakuz Work Management</span>
+            <span>© {new Date().getFullYear()} Cavakuz Work Management</span>
             <span>Print • Design • Operations</span>
           </footer>
         </div>

@@ -1,49 +1,54 @@
 import {
   BarChart3,
+  Bell,
   CheckSquare,
   FileText,
   LayoutDashboard,
   LogOut,
   Package,
   Printer,
-  ReceiptText,
-  Settings,
+  UserPlus,
   Users,
+  Wallet,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 
 export type SidebarItem = {
   label: string
   path: string
   icon: LucideIcon
+  adminOnly?: boolean
 }
 
 export const sidebarItems: SidebarItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'Customers', path: '/dashboard/customers', icon: Users },
-  { label: 'Tasks', path: '/dashboard/tasks', icon: CheckSquare },
-  { label: 'Services / Inventory', path: '/dashboard/inventory', icon: Package },
-  { label: 'Records & Payments', path: '/dashboard/records', icon: FileText },
-  { label: 'Financial Report', path: '/dashboard/financial-report', icon: BarChart3 },
-  { label: 'Invoices', path: '/dashboard/invoices', icon: ReceiptText },
+  { label: 'Customers', path: '/customers', icon: Users },
+  { label: 'Inventory', path: '/inventory', icon: Package },
+  { label: 'Sales', path: '/sales', icon: FileText },
+  { label: 'Expenses', path: '/expenses', icon: Wallet },
+  { label: 'Tasks', path: '/tasks', icon: CheckSquare },
+  { label: 'Financial Report', path: '/reports/financial', icon: BarChart3 },
+  { label: 'Notifications', path: '/notifications', icon: Bell },
+  { label: 'Create user', path: '/users/new', icon: UserPlus, adminOnly: true },
 ]
 
 type UniversalSidebarProps = {
-  activePage: string
-  onNavigate: (page: string) => void
   sidebarOpen: boolean
   onClose: () => void
 }
 
-export default function UniversalSidebar({ activePage, onNavigate, sidebarOpen, onClose }: UniversalSidebarProps) {
+export default function UniversalSidebar({ sidebarOpen, onClose }: UniversalSidebarProps) {
   const navigate = useNavigate()
+  const { logout, isAdmin } = useAuth()
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('cavakuz-role')
-    localStorage.removeItem('cavakuz-role')
-    navigate('/login')
+  const handleLogout = async () => {
+    await logout()
+    navigate('/login', { replace: true })
   }
+
+  const items = sidebarItems.filter((item) => !item.adminOnly || isAdmin)
 
   return (
     <>
@@ -64,31 +69,23 @@ export default function UniversalSidebar({ activePage, onNavigate, sidebarOpen, 
 
         <div className="sidebar-caption">WORKSPACE</div>
         <nav className="sidebar-nav">
-          {sidebarItems.map(({ label, path, icon: Icon }) => (
-            <button
-              key={label}
-              className={`nav-link-custom ${activePage === label ? 'active' : ''}`}
-              onClick={() => {
-                onNavigate(label)
-                navigate(path)
-              }}
+          {items.map(({ label, path, icon: Icon }) => (
+            <NavLink
+              key={`${label}-${path}`}
+              to={path}
+              end={path === '/dashboard'}
+              className={({ isActive }) => `nav-link-custom ${isActive ? 'active' : ''}`}
+              onClick={onClose}
             >
               <Icon size={19} />
               <span>{label}</span>
-            </button>
+            </NavLink>
           ))}
         </nav>
 
         <div className="sidebar-bottom">
-          <div className="sidebar-caption">PREFERENCES</div>
-          <button className={`nav-link-custom ${activePage === 'Settings' ? 'active' : ''}`} onClick={() => {
-            onNavigate('Settings')
-            navigate('/dashboard')
-          }}>
-            <Settings size={19} />
-            <span>Settings</span>
-          </button>
-          <button className="nav-link-custom" onClick={handleLogout}>
+          <div className="sidebar-caption">SESSION</div>
+          <button className="nav-link-custom" onClick={() => void handleLogout()}>
             <LogOut size={19} />
             <span>Log out</span>
           </button>
